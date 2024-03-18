@@ -1,3 +1,6 @@
 bind_addr = ":3000"
 log_level = "debug"
 
+[store]
+database_url = "host=localhost dbname=restapi_dev sslmode=disable"
+
