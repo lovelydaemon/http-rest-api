@@ -1,32 +1,44 @@
 package model
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	ID                int
 	Email             string
-  Password string 
+	Password          string
 	EncryptedPassword string
 }
 
+func (u *User) Validate() error {
+	return validation.ValidateStruct(
+		u,
+		validation.Field(&u.Email, validation.Required, is.Email),
+		validation.Field(&u.Password, validation.By(requiredIf(u.EncryptedPassword == "")), validation.Length(8, 100)),
+	)
+}
+
 func (u *User) BeforeCreate() error {
-  if len(u.Password) > 0 {
-    enc, err := encryptString(u.Password)
-    if err != nil {
-      return err
-    }
+	if len(u.Password) > 0 {
+		enc, err := encryptString(u.Password)
+		if err != nil {
+			return err
+		}
 
-    u.EncryptedPassword = enc
-  }
+		u.EncryptedPassword = enc
+	}
 
-  return nil
+	return nil
 }
 
 func encryptString(s string) (string, error) {
-  b, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.MinCost)
-  if err != nil {
-    return "", nil
-  }
+	b, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.MinCost)
+	if err != nil {
+		return "", nil
+	}
 
-  return string(b), nil
+	return string(b), nil
 }
